@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}{{ protein.uniprot_name }}{% endblock %}
+
+{% block content %}
+<!-- Fontawesome -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+<script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+<script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+<!-- bokeh stuff -->
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.js"></script>
+
+<!-- Javascript function to show substrate detail -->
+<script>
+function phosphosite_minimap (d,cv_max) {
+    // `d` is the original data object for the row
+    phosphosite_id = '{{protein.gene_name}}' + '(' + d[2] + d[1] + ')'
+    img_url = '../phosphosite/minimap/' + phosphosite_id + '/' + cv_max;
+    // Bokeh src and div are provided by substarate_vbar route
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.open("GET", img_url, false);
+    xmlhttp.send();
+    return xmlhttp.responseText;
+}
+</script>
+<body>
+    <div class="card text-bg-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp" style="margin-top: 5rem">
+        <div class="card-header bg-secondary text-light"><h4><strong>{{ protein.uniprot_name }} ({{ protein.gene_name }})</strong></h4></div>
+        <div class="card-body bg-white">
+          <p class="card-text">
+            <p>{{ protein.description }}</p>
+            <ul>
+                <li><strong>Uniprot:</strong> <a href='http://www.uniprot.org/uniprot/{{protein.uniprot_id}}' target="_blank">{{protein.uniprot_name}}</a></li>
+                <li><strong>Alternative names:</strong> {{protein.gene_synonyms.replace(' ',', ')}}</li>
+                {% if protein.kinase_name %}
+                <li><strong>Kinase name::</strong> <a href="{{ url_for('kinase', kinase_name=protein.kinase_name) }}">{{protein.kinase_name}}</a></li>
+                {% endif %}
+              </ul>
+          </p>
+        </div>
+    </div>
+    <div class="card text-bg-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header bg-secondary text-light"><h4><strong>Protein annotation</strong></h4></div>
+        <div class="card-body bg-white">
+          <p class="card-text">
+            <div class="annotation">
+                <div id='pv_div'>   
+
+                    <script>
+                        window.onload = function() {
+                            var pv_div = document.getElementById('pv_div');
+                            var ProtVista = require('ProtVista');
+                            var instance = new ProtVista({
+                                el: pv_div,
+                                uniprotacc: '{{protein.uniprot_id}}',
+                                customDataSource: {
+                                    url: '../protvista_ptms/' + '{{protein.uniprot_name}}' +'/',
+                                    source: 'QMUL',
+                                    useExtension: false
+                                },
+                                // defaultSources: false,
+                                exclusions: ['TOPOLOGY', 'MOLECULE_PROCESSING', 'PROTEOMICS', 'VARIATION', 'MUTAGENESIS', 'ANTIGEN'],
+                                categoryOrder: ['SEQUENCE_INFORMATION', 'STRUCTURAL', 'DOMAINS_AND_SITES', 'PTM']
+                            });
+                        }
+                    </script>
+                      
+                </div>
+                    
+                <div align="center">
+                    <div class="legend">
+                        <img class="legend-icon" src="../static/red_triangle.png">
+                        <span class="legend-text">Putative downstream target</span>
+                    </div>
+                    <div class="legend">
+                        <img class="legend-icon" src="../static/green_triangle.png">
+                        <span class="legend-text">Detected phosphosite not yet associated to a specific kinase</span>
+                    </div>
+                    <div class="legend">
+                        <img class="legend-icon" src="../static/blue_triangle.png">
+                        <span class="legend-text">PTM annotation from UniProt</span>
+                    </div>
+                </div>
+                
+                <style>
+                    .legend {
+                        display: inline-flex;
+                        align-items: center;
+                        margin: 10px;
+                    }
+                    .legend-icon {
+                        width: 16px;
+                        height: 16px;
+                        margin-right: 5px;
+                    }
+                    .legend-text {
+                        font-size: 14px;
+                    }
+                    
+                    .up_pftv_container {
+                        margin: 0 auto;
+                    }
+                </style>
+            </div>
+          </p>
+        </div>
+    </div>
+    <div class="card text-bg-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header bg-secondary text-light"><h4><strong>Phosphosites of Interest ({{ substrate_count }})</strong></h4></div>
+        <div class="card-body bg-white">
+          <p class="card-text">
+            <div class="substrate_table">
+                {{ substrate_data|safe }}      
+                <script type="text/javascript">
+                $(document).ready(function() {
+                    var table = $('#substrate_table').DataTable({"pageLength": 20,
+                        "order": [[1, 'asc']],
+                        "columns": [{"className":'details-control', "orderable": false},                          
+                                    {"className": ''},
+                                    {"className": ''},
+                                    {"className": ''},
+                                    {"className": ''},
+                                    {"className": ''}]
+                        });
+        
+                // Add event listener for opening and closing details
+                $('#substrate_table tbody').on('click', 'td.details-control', function () {
+                    var tr = $(this).closest('tr');
+                    var row = table.row(tr);
+        
+                    if ( row.child.isShown() ) {
+                        // This row is already open - close it
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    }
+                    else {
+                        // Open this row
+                        row.child( phosphosite_minimap(row.data(),'0.5')).show();
+                        tr.addClass('shown');
+                    }
+                } );          
+                });
+                </script>    
+            </div>
+          </p>
+        </div>
+    </div>
+    <div class="card text-bg-light bg-secondary text-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header"><strong>Subcellular Locations</strong></div>
+        <div class="card-body bg-white text-dark">
+            <script type="module" src="https://www.swissbiopics.org/static/swissbiopics.js"></script>
+            <template id="sibSwissBioPicsSlLiItem">
+                <li class="subcellular_location">
+                    <a class="subcell_name"></a>
+                    <span class="subcell_description"></span>
+                </li>
+            </template>
+            <!-- Override default style -->
+            <template id="sibSwissBioPicsStyle">
+                <style>
+                    ul.notpresent {
+                        display: none;
+                    }
+                </style>
+            </template>
+            <sib-swissbiopics-sl taxid="9606" gos="{{ go_locations }}"></sib-swissbiopics-sl>
+        </div>
+    </div>
+    <style>
+        td.details-control {
+            background: url('../static/details_open.png') no-repeat center center;
+            cursor: pointer;
+        }
+        tr.shown td.details-control {
+            background: url('../static/details_close.png') no-repeat center center;
+        }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-widgets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-tables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-api.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-mathjax.min.js"></script>
+<script src="http://ebi-uniprot.github.io/CDN/protvista/protvista.js"></script>
+<link href="http://ebi-uniprot.github.io/CDN/protvista/css/main.css" rel="stylesheet"/>
+
+    
+<script>
+    $(document).ready(function() {
+        var dataTable = $('#substrate_table').DataTable();
+        $('#searchInput').on('input', function() {
+        dataTable.search(this.value).draw();
+        });
+    });
+</script>
+
+<script>
+$(document).ready(function() {
+    var dataTable = $('#perturbagensTable').DataTable();
+    $('#searchInput').on('input', function() {
+    dataTable.search(this.value).draw();
+    });
+});
+
+$(document).ready(function() {
+    var dataTable = $('#pdtTable_MCF-7').DataTable();
+    $('#searchInput').on('input', function() {
+    dataTable.search(this.value).draw();
+    });
+});
+
+$(document).ready(function() {
+    var dataTable = $('#pdtTable_HL-60').DataTable();
+    $('#searchInput').on('input', function() {
+    dataTable.search(this.value).draw();
+    });
+});
+
+$(document).ready(function() {
+    var dataTable = $('#pdtTable_NTERA-2-clone-D1').DataTable();
+    $('#searchInput').on('input', function() {
+    dataTable.search(this.value).draw();
+    });
+});
+
+$(document).ready(function() {
+    var dataTable = $('#substratesTable').DataTable();
+    $('#searchInput').on('input', function() {
+    dataTable.search(this.value).draw();
+    });
+});
+</script>
+</body>
+{% endblock %}

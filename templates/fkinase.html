@@ -1,0 +1,162 @@
+<body>
+    <!-- Javascript function to show substrate detail -->
+    <script>
+    function phosphosite_vbar (d,cell_line,kinase,dx_threshold) {
+        // `d` is the original data object for the row
+        img_url = '../phosphosite/vbar/' + d[1] + '/' + cell_line + '/' + kinase + '/' + dx_threshold;
+        // Bokeh src and div are provided by substarate_vbar route
+        xmlhttp=new XMLHttpRequest();
+        xmlhttp.open("GET", img_url, false);
+        xmlhttp.send();
+        return xmlhttp.responseText;
+    }
+    </script>
+
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>Putative downstream targets (PDTs)</strong></div>
+        <div class="panel-body">
+            <div class="container" style="width:100%;">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#pdt-mcf7">MCF-7&nbsp;<span class="badge">{{ pdt_count['MCF-7'] }}</span></a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div id="pdt-mcf7" class="tab-pane fade in active">
+                        <!-- network graph injected as svg here -->
+                        <br>Graph indicates extent of PDT commonality between {{ kinase.gene_name }} and other kinases.
+                        {% if pdt_count['MCF-7'] == 0 %}
+                            No PDTs found for {{ kinase.gene_name }} in MCF-7.
+                        {% else %}
+                            {{ pdt_data['MCF-7']|safe }}
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    var table = $('#Mpdt_table').DataTable({
+                                        "pageLength": 10,
+                                        "order": [[4, 'desc']],
+                                        "columns": [
+                                            {"className": 'details-control', "orderable": false},
+                                            {"className": ''},
+                                            {"className": ''},
+                                            {"className": ''},
+                                            {"className": ''},
+                                            {"className": ''}
+                                        ]
+                                    });
+
+                                    // Function to toggle open/close images
+                                    function toggleImage(img) {
+                                        if (img.attr("src") === "/static/details_open.png") {
+                                            img.attr("src", "/static/details_close.png");
+                                        } else {
+                                            img.attr("src", "/static/details_open.png");
+                                        }
+                                    }
+
+                                    // Add event listener for opening and closing details
+                                    $('#Mpdt_table tbody').on('click', 'td.details-control', function () {
+                                        var tr = $(this).closest('tr');
+                                        var row = table.row(tr);
+
+                                        if (row.child.isShown()) {
+                                            // This row is already open - close it
+                                            row.child.hide();
+                                            tr.removeClass('shown');
+                                            // Toggle the image to "details open"
+                                            toggleImage($(this).find('img'));
+                                        } else {
+                                            // Open this row
+                                            row.child(phosphosite_vbar(row.data(),'MCF-7','{{ kinase.gene_name }}','0.7')).show();
+                                            tr.addClass('shown');
+                                            // Toggle the image to "details close"
+                                            toggleImage($(this).find('img'));
+                                        }
+                                    });
+                                });
+                            </script>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% block doc -%}
+<!DOCTYPE html>
+<html{% block html_attribs %}{% endblock html_attribs %}>
+{%- block html %}
+  <head>
+    {%- block head %}
+    <title>{% block title %}{% endblock title %}</title>
+
+    {%- block metas %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {%- endblock metas %}
+
+    {%- block styles %}
+    <!-- Bootstrap -->
+    <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+    <!-- Datatables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="test/css" href="https://cdn.datatables.net/buttons/1.5.2/css/buttons.dataTables.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+    <!-- Additional CSS for datatable child rows -->
+    <style>
+        td.details-control {
+            background: url('../static/details_open.png') no-repeat center center;
+            cursor: pointer;
+        }
+        tr.shown td.details-control {
+            background: url('../static/details_close.png') no-repeat center center;
+        }
+    </style>
+
+    <!-- bokeh stuff -->
+    <link
+        href="http://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.css"
+        rel="stylesheet" type="text/css">
+    <link
+       href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.css"
+        rel="stylesheet" type="text/css">
+
+    <!-- Fontawesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    {%- endblock styles %}
+    {%- endblock head %}
+
+    {% block scripts %}
+    <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+    <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+    <!-- this block is just for the download buttons -->
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.5.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.flash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.print.min.js"></script>
+
+    <!-- bokeh stuff -->
+    <script src="http://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.js"></script>
+    <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.js"></script>
+
+</head>    
+
+
+    {%- endblock scripts %}
+
+  </head>
+  <body{% block body_attribs %}{% endblock body_attribs %}>
+    {% block body -%}
+    {% block navbar %}
+    {%- endblock navbar %}
+    {% block content -%}
+    {%- endblock content %}
+
+    {%- endblock body %}
+  </body>
+{%- endblock html %}
+</html>
+{% endblock doc -%}

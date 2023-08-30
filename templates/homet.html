@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ChemPhoPro 2.0 - Welcome</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .start-screen {
+      background: linear-gradient(to left, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)) 100%, url(static/bg.jpg) no-repeat right center;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .welcome-text {
+      color: white;
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .search-bar {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .search-button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3rem;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="start-screen">
+    <div class="navbar"></div>
+    <h1 class="welcome-text">Welcome to ChemPhoPro 2.0</h1>
+    <div class="search-container">
+      <input type="text" class="search-bar" placeholder="Search...">
+      <button class="search-button">Search</button>
+    </div>
+  </div>
+</body>
+</html>

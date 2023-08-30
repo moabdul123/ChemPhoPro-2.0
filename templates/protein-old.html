@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}{{ protein.uniprot_name }}{% endblock %}
+
+{% block content %}
+<body>
+    <div class="accordion" id="accordionPanelsStayOpenExample">
+      <div class="accordion-wrap">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+              <strong style="font-size: 24px; color: #{$white};">{{ protein.uniprot_name }} ({{ protein.gene_name }})</strong>
+            </button>
+          </h2>
+          <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+            <div class="accordion-body">
+              <p>{{ protein.description }}</p>
+              <ul>
+                <li><strong>Uniprot:</strong> <a href='http://www.uniprot.org/uniprot/{{protein.uniprot_id}}' target="_blank">{{protein.uniprot_name}}</a></li>
+                <li><strong>Alternative names:</strong> {{protein.gene_synonyms.replace(' ',', ')}}</li>
+                {% if protein.kinase_name %}
+                <li><strong>Kinase name::</strong> <a href="{{ url_for('kinase', kinase_name=protein.kinase_name) }}">{{protein.kinase_name}}</a></li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item2">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+            <strong style="font-size: 24px">Protein annotation</strong>
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+          <div class="accordion-body"></div>
+            <div class="annotation">
+                <div id='pv_div'>   
+
+                    <script>
+                        window.onload = function() {
+                            var pv_div = document.getElementById('pv_div');
+                            var ProtVista = require('ProtVista');
+                            var instance = new ProtVista({
+                                el: pv_div,
+                                uniprotacc: '{{protein.uniprot_id}}',
+                                customDataSource: {
+                                    url: '../protvista_ptms/' + '{{protein.uniprot_name}}' +'/',
+                                    source: 'QMUL',
+                                    useExtension: false
+                                },
+                                // defaultSources: false,
+                                exclusions: ['TOPOLOGY', 'MOLECULE_PROCESSING', 'PROTEOMICS', 'VARIATION', 'MUTAGENESIS', 'ANTIGEN', 'SEQUENCE_INFORMATION'],
+                                categoryOrder: ['STRUCTURAL', 'DOMAINS_AND_SITES', 'PTM']
+                            });
+                        }
+                    </script>
+                      
+                </div>
+                    
+                <div align="center">
+                    <div class="legend">
+                        <img class="legend-icon" src="../static/red_triangle.png">
+                        <span class="legend-text">Putative downstream target</span>
+                    </div>
+                    <div class="legend">
+                        <img class="legend-icon" src="../static/green_triangle.png">
+                        <span class="legend-text">Detected phosphosite not yet associated to a specific kinase</span>
+                    </div>
+                    <div class="legend">
+                        <img class="legend-icon" src="../static/blue_triangle.png">
+                        <span class="legend-text">PTM annotation from UniProt</span>
+                    </div>
+                </div>
+                
+                <style>
+                    .legend {
+                        display: inline-flex;
+                        align-items: center;
+                        margin: 10px;
+                    }
+                    .legend-icon {
+                        width: 16px;
+                        height: 16px;
+                        margin-right: 5px;
+                    }
+                    .legend-text {
+                        font-size: 14px;
+                    }
+                </style>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item2">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                <strong style="font-size: 24px">Phosphosites of Interest ({{ substrate_count }})</strong>
+              </button>
+            </h2>
+            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+              <div class="accordion-body"></div>
+                <div class="Perturbagen-table">
+                  <table id="POIT" class="table table-hover">
+                    {{ substrate_data|safe }}
+                  </table>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"></script>    
+<script src="http://ebi-uniprot.github.io/CDN/protvista/protvista.js"></script>
+<link href="http://ebi-uniprot.github.io/CDN/protvista/css/main.css" rel="stylesheet"/>
+
+
+<script>
+    $(document).ready(function() {
+      var dataTable = $('#substrate_table').DataTable();
+      $('#searchInput').on('input', function() {
+        dataTable.search(this.value).draw();
+      });
+    });
+</script>
+</body>
+
+{% endblock %}

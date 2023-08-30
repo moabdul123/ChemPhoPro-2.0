@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+
+    <div class="card text-bg-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp" style="margin-top: 5rem">
+        <div class="card-header bg-secondary text-light"><h4><strong>{{ perturbagen.name }}</strong></h4></div>
+        <div class="card-body bg-white">
+          <p class="card-text">
+            {% if perturbagen.chemspider_id != None %}
+	            <img src="http://www.chemspider.com/ImagesHandler.ashx?id={{ perturbagen.chemspider_id }}&w=600&h=600" style= "display: block; margin: 0 auto; align-items: center;"</img>
+            {% endif %}
+            <ul>
+              <li><strong>Chemspider ID:</strong> <a href='http://www.chemspider.com/Chemical-Structure.{{ perturbagen.chemspider_id }}.html' target="_blank">{{ perturbagen.chemspider_id }}</a></li>
+              <li><strong>Action:</strong> {{ perturbagen.action }}</li>
+              <li><strong>Alternative names:</strong> {% if synonyms %} {{ synonyms }} {% else %} None {% endif %} </li>
+            </ul>
+          </p>
+        </div>
+    </div>
+    <div class="card text-bg-light bg-secondary text-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header"><strong>Reported targets ({{ kinase_count }}) </strong></div>
+        <div class="card-body bg-white text-dark">
+          <p class="card-text">
+            <div class="Perturbagen-table">
+                <table id="perturbagensTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Kinase</th>
+                            <th>Vendor</th>
+                            <th>DiscoverX assay</th>
+                            <th>Kuster <i>et al.</i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in kinase_data %}
+                        <tr>
+                            <td><a href="{{ url_for('kinase', kinase_name=row['Kinase']) }}">{{ row['Kinase'] }}</a></td>
+                            <td>{% if row['Vendor'] %}&#9660;{% endif %}</td>
+                            <td>{% if row['DiscoverX assay'] %}{{ row['DiscoverX assay'] }}{% endif %}</td>
+                            <td>{% if row['Kuster <i>et al.</i>'] %}{{ row['Kuster <i>et al.</i>'] }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+          </p>
+        </div>
+      </div>
+    </div>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-widgets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-tables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-api.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-mathjax.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <script>
+      $(document).ready(function() {
+        var dataTable = $('#perturbagensTable').DataTable();
+        $('#searchInput').on('input', function() {
+          dataTable.search(this.value).draw();
+        });
+      });
+    </script>
+</body>
+{% endblock %}

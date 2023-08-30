@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="animate__animated animate__fadeInUp" style="margin-top: 500px;">About the EBDT Algorithm</h1>
+
+<p class="animate__animated animate__fadeInUp" style="margin-left: 150px; margin-right: 150px;">The objective of the expectancy of being downstream target (EBDT) algorithm is to determine the most probable kinase(s) acting upstream phosphorylation sites present in phosphoproteomics data obtained from cells treated with kinase inhibitors. Sites inferred to be regulated by given kinases are denoted Putative Downstream Targets (PDTs) of such kinases.</p>
+
+<p class="animate__animated animate__fadeInUp" style="margin-left: 150px; margin-right: 150px;">The EBDT algorithm compares the impact of kinase inhibitors on decreasing the extent of phosphorylation on protein amino acid residues with the target selectivity of the same set of inhibitors. Although a comprehensive knowledge of all kinases inhibited by the compounds helps in extending the range of kinases for which PDTs may be determined, application of the method does not require full determination of inhibitor specificities because the analysis is carried out for given kinases, rather than for given inhibitors. For a given kinase, EBDT first establishes the number and identity of compounds that inhibit such kinase <i>in vitro</i>, thus creating an inhibitor fingerprint for such kinase. The effect of this subset of compounds in inhibiting phosphorylation sites in intact cells is then assessed systematically by large-scale phosphoproteomics (see sample preparation and mass spectrometry sections below). A ratio is calculated between the number of compounds (within the kinase-inhibitor fingerprint set) that inhibit a given phosphorylation site to the number of the same compounds that inhibit a given kinase (we call this the site-kinase inhibition ratio).</p>
+
+<p class="animate__animated animate__fadeInUp" style="margin-left: 150px; margin-right: 150px;">Site-kinase inhibition ratios are calculated for all kinases with unique kinase inhibitor fingerprints and for all phosphorylation sites reliably identified and quantified by phosphoproteomics. The analysis is restricted to kinases expressed in the cell line under investigation (as determined by phosphoproteomics, proteomics, and kinase enrichment using immobilized ATP probes). Kinases showing the highest site-kinase inhibition ratio are considered to be the most probable kinases acting upstream of a given phosphorylation site. Thus, for a given phosphorylation site, we rank kinases based on the site-kinase inhibition ratios from 0 (negligible probability of kinase being upstream of the site under consideration) to 1 (high probability). Final PDTs of a given kinase are selected by choosing sites with large site-kinase inhibition ratios for kinases with high probability ranking.</p>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+/>
+{% endblock %}

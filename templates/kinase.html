@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}{{ kinase.kinase_name }}{% endblock %}
+
+{% block content %}
+<!-- Fontawesome -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+<script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+<script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+<!-- bokeh stuff -->
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.js"></script>
+<!-- Javascript function to show substrate detail -->
+  <script>
+  function phosphosite_vbar (d,cell_line,kinase,dx_threshold) {
+      // `d` is the original data object for the row
+      img_url = '../phosphosite/vbar/' + d[1] + '/' + cell_line + '/' + kinase + '/' + dx_threshold;
+      // Bokeh src and div are provided by substarate_vbar route
+      xmlhttp=new XMLHttpRequest();
+      xmlhttp.open("GET", img_url, false);
+      xmlhttp.send();
+      return xmlhttp.responseText;
+  }
+  </script>
+<body>
+    <div class="card text-bg-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp" style="margin-top: 5rem">
+      <div class="card-header bg-secondary text-light"><h4><strong>{{ kinase.kinase_name }}</strong></h4></div>
+      <div class="card-body bg-white">
+        <h7 class="card-title">{{ kinase.description }}</h7>
+        <p class="card-text">
+          <ul>
+            <li><strong>Families:</strong> {{ kinase.families }}</li>
+            <li><strong>Uniprot protein name:</strong> <a href="{{ url_for('protein', protein_name=kinase.uniprot_name) }}">{{ kinase.uniprot_name }}</a></li>
+            <li><strong>Alternative names:</strong> {{ kinase.gene_synonyms }}</li>
+            <li><strong>Detected in:</strong> {{ kinase.expressed_in }}</li>
+          </ul>
+        </p>
+      </div>
+    </div>
+    <div class="card text-bg-light bg-secondary text-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header"><strong>Perturbagens ({{ perturbagen_count }})</strong></div>
+        <div class="card-body bg-white text-dark">
+          <p class="card-text">
+            <div class="Perturbagen-table">
+                <table id="perturbagensTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Perturbagen</th>
+                            <th>Action</th>
+                            <th>Vendor</th>
+                            <th>DiscoverX Assay</th>
+                            <th>Kuster et al</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perturbagen in perturbagen_data %}
+                        <tr>
+                            <td><a href="{{ url_for('perturbagen', perturbagen_name=perturbagen[0]) }}">{{ perturbagen[0] }}</a></td>
+                            <td>{{ perturbagen[1] }}</td>
+                            <td>{{ perturbagen[2] }}</td>
+                            <td>{% if perturbagen[3] %}{{ perturbagen[3] }}%{% endif %}</td>
+                            <td>{% if perturbagen[4] %}{{ perturbagen[4] }}%{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+          </p>
+        </div>
+      </div>
+      <div class="card text-bg-light bg-secondary text-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header"><strong>Putative downstream targets (PDT)</strong></div>
+        <div class="card-body bg-white text-dark">
+          <p class="card-text">
+            <h6>These substrates have been identified as possible downstream phosphorylation targets of {{ kinase.kinase_name }} from our data using the <a href="/EBDT">EBDT</a> algorithm.</h6>
+            <div class="PDT_table">
+                <!-- Tab links -->
+                <div class="tab">
+                  <button class="tablinks" onclick="openCity(event, 'MCF-7')" id="defaultOpen">MCF-7 ({{ pdt_count["MCF-7"] }})</button>
+                  <button class="tablinks" onclick="openCity(event, 'HL-60')" >HL-60 ({{ pdt_count["HL-60"] }})</button>
+                  <button class="tablinks" onclick="openCity(event, 'NTERA-2 clone D1')" >NTERA-2 clone D1 ({{ pdt_count["NTERA-2 clone D1"] }})</button>
+                </div>
+  
+                <!-- Tab content -->
+                <div id="MCF-7" class="tabcontent">
+                  <h3>MCF-7</h3>
+                  <div class="table-wrapper">
+                    <h7>Graph shows the extent of PDT commonality with {{ kinase.kinase_name }} and other kinases </h7>
+                    <div class="diagram">
+                        <!-- Use the iframe tag to display the example.html file -->
+                        <iframe src="{{ url_for('static', filename='network_diagram_MCF-7.html') }}" width="800" height="800"></iframe>
+                    </div>
+                    <div class="tab-content">
+                        <!-- network graph injected as svg here -->
+                        {% if pdt_data['MCF-7'] %}
+                            {{ pdt_data['MCF-7']|safe }}
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    var table = $('#Mpdt_table').DataTable({"pageLength": 10,
+                                        "order": [[4, 'desc']],
+                                        "columns": [{"className":'details-control', "orderable": false},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''}]
+                                            });
+            
+                                    // Add event listener for opening and closing details
+                                    $('#Mpdt_table tbody').on('click', 'td.details-control', function () {
+                                        var tr = $(this).closest('tr');
+                                        var row = table.row(tr);
+            
+                                        if ( row.child.isShown() ) {
+                                            // This row is already open - close it
+                                            row.child.hide();
+                                            tr.removeClass('shown');
+                                        }
+                                        else {
+                                            // Open this row
+                                            row.child( phosphosite_vbar(row.data(),'MCF-7','{{ kinase.gene_name }}','0.7')).show();
+                                            tr.addClass('shown');
+                                        }
+                                    } );          
+                                });
+                            </script>
+                        {% else %}
+                            <p>No PDT data found for MCF-7.</p>
+                        {% endif %}
+                    </div>
+                  </div>
+                </div>
+  
+                <div id="HL-60" class="tabcontent">
+                  <h3>HL-60</h3>
+                  <div class="table-wrapper">
+                    <h7>Graph shows the extent of PDT commonality with {{ kinase.kinase_name }} and other kinases </h7>
+                    <div class="diagram">
+                        <!-- Use the iframe tag to display the example.html file -->
+                        <iframe src="{{ url_for('static', filename='network_diagram_HL-60.html') }}" width="800" height="800" class="diagram-iframe"></iframe>
+                    </div>
+                    <div class="tab-content">
+                        <!-- network graph injected as svg here -->
+                        {% if pdt_data['HL-60'] %}
+                            {{ pdt_data['HL-60']|safe }}
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    var table = $('#Hpdt_table').DataTable({"pageLength": 10,
+                                        "order": [[4, 'desc']],
+                                        "columns": [{"className":'details-control', "orderable": false},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''}]
+                                            });
+            
+                                    // Add event listener for opening and closing details
+                                    $('#Hpdt_table tbody').on('click', 'td.details-control', function () {
+                                        var tr = $(this).closest('tr');
+                                        var row = table.row(tr);
+            
+                                        if ( row.child.isShown() ) {
+                                            // This row is already open - close it
+                                            row.child.hide();
+                                            tr.removeClass('shown');
+                                        }
+                                        else {
+                                            // Open this row
+                                            row.child( phosphosite_vbar(row.data(),'HL-60','{{ kinase.gene_name }}','0.7')).show();
+                                            tr.addClass('shown');
+                                        }
+                                    } );          
+                                });
+                            </script>
+                        {% else %}
+                            <p>No PDT data found for HL-60.</p>
+                        {% endif %}
+                    </div>
+                  </div>
+                </div>
+  
+                <div id="NTERA-2 clone D1" class="tabcontent">
+                  <h3>NTERA-2 clone D1</h3>
+                  <div class="table-wrapper">
+                    <h7>Graph shows the extent of PDT commonality with {{ kinase.kinase_name }} and other kinases </h7>
+                    <div class="diagram">
+                        <!-- Use the iframe tag to display the example.html file -->
+                        <iframe src="{{ url_for('static', filename='network_diagram_NTERA-2 clone D1.html') }}" width="800" height="800"></iframe>
+                    </div>
+                    <div class="tab-content">
+                        <!-- network graph injected as svg here -->
+                        {% if pdt_data['NTERA-2 clone D1'] %}
+                            {{ pdt_data['NTERA-2 clone D1']|safe }}
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    var table = $('#Npdt_table').DataTable({"pageLength": 10,
+                                        "order": [[4, 'desc']],
+                                        "columns": [{"className":'details-control', "orderable": false},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''},
+                                                    {"className": ''}]
+                                            });
+            
+                                    // Add event listener for opening and closing details
+                                    $('#Npdt_table tbody').on('click', 'td.details-control', function () {
+                                        var tr = $(this).closest('tr');
+                                        var row = table.row(tr);
+            
+                                        if ( row.child.isShown() ) {
+                                            // This row is already open - close it
+                                            row.child.hide();
+                                            tr.removeClass('shown');
+                                        }
+                                        else {
+                                            // Open this row
+                                            row.child( phosphosite_vbar(row.data(),'NTERA-2 clone D1','{{ kinase.gene_name }}','0.7')).show();
+                                            tr.addClass('shown');
+                                        }
+                                    } );          
+                                });
+                            </script>
+                        {% else %}
+                            <p>No PDT data found for NTERA-2 clone D1.</p>
+                        {% endif %}
+                    </div>
+                  </div>
+                </div> 
+              </div>
+          </p>
+        </div>
+      </div>
+      <div class="card text-bg-light bg-secondary text-light border-secondary mb-3 col-10">
+        <div class="card-header"><strong>Previously reported substrates ({{ substrate_count }})</strong></div>
+        <div class="card-body bg-white text-dark">
+            <p class="card-text">
+                <div class="Perturbagen-table">
+                  <table id="substratesTable" class="table table-hover">
+                    <thead>
+                      <tr>
+                          <th>Phosphosite</th>
+                          <th>Protein name</th>
+                          <th>Residue</th>
+                          <th>Source</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for index, row in substrates_df.iterrows() %}
+                      <tr>
+                          <td>{{ row['Phosphosite'] }}</td>
+                          <td><a href="{{ url_for('protein', protein_name=row['Protein name']) }}">{{ row['Protein name'] }}</a></td>
+                          <td>{{ row['Residue'] }}</td>
+                          <td>{{ row['Source'] }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <div class="heatmaps-main">
+                  <h6>Please click the corresponding buttons to view the phosphosite heatmaps.</h6> 
+                  <!-- Button trigger modals -->
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalMCF7">
+                    MCF-7
+                  </button>
+                  <!-- Modal -->
+                  <div class="modal fade" id="exampleModalMCF7" tabindex="-1" aria-labelledby="exampleModalLabelMCF7" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- placeholder never shown -->
+                          {{ script['MCF-7']|safe }}
+                          {{ div['MCF-7']|safe }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalHL60">
+                    HL-60
+                  </button>
+                  <!-- Modal -->
+                  <div class="modal fade" id="exampleModalHL60" tabindex="-1" aria-labelledby="exampleModalLabelHL60" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- placeholder never shown -->
+                          {{ script['HL-60']|safe }}
+                          {{ div['HL-60']|safe }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalNTERA2">
+                    NTERA-2 clone D1
+                  </button>
+                  <!-- Modal -->
+                  <div class="modal fade" id="exampleModalNTERA2" tabindex="-1" aria-labelledby="exampleModalLabelNTERA2" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- placeholder never shown -->
+                          {{ script['NTERA-2 clone D1']|safe }}
+                          {{ div['NTERA-2 clone D1']|safe }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </p>
+        </div>
+      </div>
+      <div class="card text-bg-light bg-secondary text-light border-secondary mb-3 col-10 animate__animated animate__fadeInUp">
+        <div class="card-header"><strong>Subcellular Locations</strong></div>
+        <div class="card-body bg-white text-dark">
+            <script type="module" src="https://www.swissbiopics.org/static/swissbiopics.js"></script>
+            <template id="sibSwissBioPicsSlLiItem">
+                <li class="subcellular_location">
+                    <a class="subcell_name"></a>
+                    <span class="subcell_description"></span>
+                </li>
+            </template>
+            <!-- Override default style -->
+            <template id="sibSwissBioPicsStyle">
+                <style>
+                    ul.notpresent {
+                        display: none;
+                    }
+                </style>
+            </template>
+            <sib-swissbiopics-sl taxid="9606" gos="{{ go_locations }}"></sib-swissbiopics-sl>
+        </div>
+      </div>
+    </div>
+    
+    <style>
+      td.details-control {
+          background: url('../static/details_open.png') no-repeat center center;
+          cursor: pointer;
+      }
+      tr.shown td.details-control {
+          background: url('../static/details_close.png') no-repeat center center;
+      }
+  </style>
+
+  
+
+    
+
+
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      />
+  
+
+    <style>
+      .diagram {
+          display: block;
+          justify-content: center;
+          text-align: center;
+      }
+
+      .diagram-iframe {
+          display: block;
+          margin: 0 auto;
+      }
+      .modal-content {
+        width: 200%;
+      }
+    </style>
+
+    <script>
+      function openCity(evt, cityName) {
+        // Declare all variables
+        var i, tabcontent, tablinks, diagram;
+  
+        // Get all elements with class="tabcontent" and hide them
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+  
+        // Get all elements with class="tablinks" and remove the class "active"
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+  
+        // Show the current tab, and add an "active" class to the button that opened the tab
+        document.getElementById(cityName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+    </script>
+    
+    <script>
+    // Get the element with id="defaultOpen" and click on it
+    document.getElementById("defaultOpen").click();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-widgets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-tables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-api.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.3/bokeh-mathjax.min.js"></script>
+    
+    <script>
+      $(document).ready(function() {
+        var dataTable = $('#perturbagensTable').DataTable();
+        $('#searchInput').on('input', function() {
+          dataTable.search(this.value).draw();
+        });
+      });
+    
+      $(document).ready(function() {
+        var dataTable = $('#pdtTable_MCF-7').DataTable();
+        $('#searchInput').on('input', function() {
+          dataTable.search(this.value).draw();
+        });
+      });
+    
+      $(document).ready(function() {
+        var dataTable = $('#pdtTable_HL-60').DataTable();
+        $('#searchInput').on('input', function() {
+          dataTable.search(this.value).draw();
+        });
+      });
+    
+      $(document).ready(function() {
+        var dataTable = $('#pdtTable_NTERA-2-clone-D1').DataTable();
+        $('#searchInput').on('input', function() {
+          dataTable.search(this.value).draw();
+        });
+      });
+
+      $(document).ready(function() {
+        var dataTable = $('#substratesTable').DataTable();
+        $('#searchInput').on('input', function() {
+          dataTable.search(this.value).draw();
+        });
+      });
+    </script>
+</body>
+</html>  
+{% endblock %}

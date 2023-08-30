@@ -1,0 +1,190 @@
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* height: 100vh; */
+    margin: 0 auto;
+}
+
+
+.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h5 {
+    margin-top: 0;
+  }
+
+.main-container {
+  margin-right: 6.5%;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 50px;
+    /* margin-bottom: -50px; */
+    height: 40%;
+    margin-top: 45%;
+}
+
+.header-container {
+  margin-bottom: -75px;
+}
+h1 {
+    margin-right: 0%;
+}
+
+img {
+    margin-right: -40%;
+    height: 250px;
+    width: 250px;
+}
+
+.search-bar {
+    width: 900px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.form-control {
+    margin-bottom: 10px;
+}
+
+.btn {
+    width: auto;
+    margin-bottom: 10px;
+}
+
+header {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+  }
+
+  .navbar {
+    background-color: #6c757d;
+  }
+  
+  .navbar-brand {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .navbar-nav .nav-link {
+    font-size: 18px;
+    color: #333;
+    margin-right: 10px;
+  }
+  
+  .navbar-nav .nav-link:hover {
+    color: #007bff;
+  }
+  
+
+  .kinase-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: left;
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-top: 20px;
+    width: 100%;
+    overflow-y: auto;
+  }
+
+  .accordion-button {
+    background-color: white;
+    color: black;
+  }
+
+  .accordion {
+    position: fixed;
+    top: 120px;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .Perturbagens-table {
+    height: 400px; /* Adjust the height as needed */
+    overflow-y: auto;
+  }
+
+  .network-graphs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .network-graphs .graph-container {
+    width: 400px;
+    height: 400px;
+    margin-bottom: 20px;
+  }
+
+  /* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+  animation: fadeEffect 1s; /* Fading effect takes 1 second */
+}
+
+/* Go from zero to full opacity */
+@keyframes fadeEffect {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+
+
+.accordion-item {
+  width: 100vh ;
+}
+
+.card text-bg-light mb-3 {
+  width: 100vh ;
+}
+
+
